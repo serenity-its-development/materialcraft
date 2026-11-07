@@ -128,6 +128,39 @@ pub fn zip_files(files: &[(String, Vec<u8>)]) -> Result<Vec<u8>, String> {
     Ok(buf.into_inner())
 }
 
+/// OneOS: framed by a host page, a file the browser would have downloaded goes to the host instead, and File > Save goes under the
+/// name of the file the host opened (a new version of it); anything else (Save as, an export) keeps its own name and is a copy.
+pub mod host {
+    use std::cell::RefCell;
+
+    /// Hands a file to the host: `Ok` once it was posted.
+    pub type Deliver = fn(&str, &[u8]) -> Result<(), String>;
+
+    thread_local! {
+        static DELIVER: RefCell<Option<Deliver>> = const { RefCell::new(None) };
+        static OPENED: RefCell<Option<String>> = const { RefCell::new(None) };
+    }
+
+    /// Route every download to `deliver` from now on.
+    pub fn install(deliver: Deliver) {
+        DELIVER.with(|d| *d.borrow_mut() = Some(deliver));
+    }
+
+    /// The name of the file the host opened (`None`: nothing is open from the host).
+    pub fn set_opened(name: Option<String>) {
+        OPENED.with(|o| *o.borrow_mut() = name);
+    }
+
+    pub fn opened() -> Option<String> {
+        OPENED.with(|o| o.borrow().clone())
+    }
+
+    /// `Some` when a host takes the file.
+    pub fn deliver(name: &str, bytes: &[u8]) -> Option<Result<(), String>> {
+        DELIVER.with(|d| *d.borrow()).map(|f| f(name, bytes))
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
 
@@ -154,7 +187,7 @@ mod web {
 
     /// File ▸ Open: a package, picked in the browser
     pub fn open(ctx: &egui::Context) {
-        pick(ctx, "MaterialCraft package or material", crate::windows::OPEN_EXTS, Pick::Package);
+        pick(ctx, "Material package or material", crate::windows::OPEN_EXTS, Pick::Package);
     }
 
     /// 3D view ▸ Scene ▸ Load mesh
@@ -167,9 +200,22 @@ mod web {
         pick(ctx, "Images", materialcraft_engine::formats::IMAGE_EXTENSIONS, Pick::Bitmap);
     }
 
-    /// File ▸ Save: download the package as `<name>.sbs` (bitmaps embedded)
+    /// File ▸ Save: download the package as `<name>.sbs` (bitmaps embedded); framed, the opened file under its own name
     pub fn save(app: &mut MaterialCraftApp) {
-        let name = format!("{}.sbs", materialcraft_engine::formats::safe_file_name(&app.session.pkg.name));
+        let name = super::host::opened().unwrap_or_else(|| format!("{}.sbs", materialcraft_engine::formats::safe_file_name(&app.session.pkg.name)));
+        save_named(app, name);
+    }
+
+    /// File ▸ Save as: the package under its own name (framed: a copy beside the opened file, never a new version of it)
+    pub fn save_as(app: &mut MaterialCraftApp) {
+        let mut name = format!("{}.sbs", materialcraft_engine::formats::safe_file_name(&app.session.pkg.name));
+        if super::host::opened().as_deref() == Some(name.as_str()) {
+            name = format!("{} copy.sbs", materialcraft_engine::formats::safe_file_name(&app.session.pkg.name));
+        }
+        save_named(app, name);
+    }
+
+    fn save_named(app: &mut MaterialCraftApp, name: String) {
         match materialcraft_engine::file_cmds::save_bytes(&app.session).map_err(|e| e.to_string()).and_then(|b| download(&name, &b)) {
             Ok(()) => {
                 app.session.modified = false;
@@ -212,6 +258,9 @@ mod web {
 
     /// Start a browser download of `bytes` named `name` (Blob + a temporary `<a download>`)
     pub fn download(name: &str, bytes: &[u8]) -> Result<(), String> {
+        if let Some(handed) = super::host::deliver(name, bytes) {
+            return handed;
+        }
         let js = |e: wasm_bindgen::JsValue| format!("{e:?}");
         let window = web_sys::window().ok_or("no window")?;
         let document = window.document().ok_or("no document")?;

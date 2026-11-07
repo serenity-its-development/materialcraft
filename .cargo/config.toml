@@ -1,2 +1,19 @@
 [alias]
 xtask = "run -p xtask --"
+
+# OneOS: the storytold git sources we have forked are read from our fork (the pinned revisions are present there), so a --locked build
+# does not reach that third party for them. storytold/egui is not forked yet (owed: the fork needs creating), so it is still read from upstream.
+[source.storytold-1]
+git = "https://github.com/storytold/craft-libs"
+rev = "f8f8829cc7be65d466d687dae381d1ca60e31242"
+replace-with = "oneos-1"
+[source.oneos-1]
+git = "https://github.com/serenity-its-development/craft-libs"
+rev = "f8f8829cc7be65d466d687dae381d1ca60e31242"
+[source.storytold-2]
+git = "https://github.com/storytold/winit.git"
+rev = "a517b3846ee8457d84ee4975110bfda6797c44dc"
+replace-with = "oneos-2"
+[source.oneos-2]
+git = "https://github.com/serenity-its-development/winit.git"
+rev = "a517b3846ee8457d84ee4975110bfda6797c44dc"

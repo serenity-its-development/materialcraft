@@ -8,6 +8,7 @@ members = [
     "crates/eval",
     "crates/formats",
     "crates/engine",
+    "crates/host-node",
     "crates/render",
     "crates/automation",
     "crates/ui-egui",

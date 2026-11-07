@@ -1,4 +1,4 @@
-//! MaterialCraft in the browser.
+//! Material in the browser.
 //!
 //! Runs the same [`materialcraft_ui_egui::MaterialCraftApp`] as the desktop app through eframe's web
 //! runner (wgpu: WebGPU where available, WebGL2 otherwise). Build with `trunk build --release`
@@ -11,6 +11,12 @@
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+
+#[cfg(any(target_arch = "wasm32", test))]
+mod handoff;
+
+#[cfg(target_arch = "wasm32")]
+mod host;
 
 #[cfg(target_arch = "wasm32")]
 mod web;

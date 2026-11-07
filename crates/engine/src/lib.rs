@@ -22,6 +22,8 @@ pub mod file_cmds;
 pub mod graph_cmds;
 pub mod graph_edit;
 pub mod graph_grid;
+pub mod host_commands;
+pub mod host_open;
 pub mod inspect;
 pub mod material_cmds;
 pub mod node_cmds;
@@ -83,3 +85,6 @@ mod pattern_edit;
 pub use function_edit::FunctionEdit;
 pub use function_graph_target::FunctionGraphTarget;
 pub use pattern_edit::PatternEdit;
+
+#[cfg(test)]
+mod host_commands_tests;

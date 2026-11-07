@@ -84,11 +84,9 @@ pub const CATALOG: &[MenuItem] = &[
     it("Help", "Documentation...", "ui.help.docs", None),
     it("Help", "Shortcuts list...", "ui.help.shortcuts", None),
     sep("Help"),
-    it("Help", "Join the community (Discord)...", "ui.help.discord", None),
-    it("Help", "ArtCraft website...", "ui.help.website", None),
     it("Help", "Report a bug...", "ui.help.bug", None),
     sep("Help"),
-    it("Help", "About MaterialCraft...", "ui.about", None),
+    it("Help", "About Material...", "ui.about", None),
 ];
 
 fn is_ui(id: &str) -> bool {

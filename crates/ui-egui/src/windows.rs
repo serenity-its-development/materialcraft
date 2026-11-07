@@ -297,17 +297,14 @@ fn preferences(app: &mut MaterialCraftApp, ctx: &egui::Context) {
 
 fn about(app: &mut MaterialCraftApp, ctx: &egui::Context) {
     let mut open = true;
-    modal(ctx, "about", tr("About MaterialCraft"), &mut open, vec2(400.0, 260.0), |ui| {
+    modal(ctx, "about", tr("About MaterialCraft").replace("MaterialCraft", "Material"), &mut open, vec2(400.0, 260.0), |ui| {
         let tk = Tokens::get(ui.ctx());
         ui.vertical_centered(|ui| {
-            ui.label(RichText::new("MaterialCraft").size(22.0).strong().color(tk.accent));
+            ui.label(RichText::new("Material").size(22.0).strong().color(tk.accent));
             ui.label(format!("{} {}", tr("Version"), materialcraft_engine::VERSION));
             ui.add_space(6.0);
             ui.label(tr("Node-based procedural materials, built in pure Rust."));
-            ui.label(tr("An open-source Crafting App by the ArtCraft team and community."));
             ui.add_space(6.0);
-            ui.hyperlink_to("getartcraft.com/apps/materialcraft", "https://getartcraft.com/apps/materialcraft");
-            ui.hyperlink_to("discord.gg/artcraft", "https://discord.gg/artcraft");
             ui.add_space(6.0);
             ui.label(RichText::new("MIT OR Apache-2.0").size(11.0).color(tk.text_dim));
         });
@@ -369,14 +366,12 @@ fn home(app: &mut MaterialCraftApp, ctx: &egui::Context) {
                 }
                 ui.add_space(16.0);
                 ui.hyperlink_to(tr("Documentation"), "https://github.com/storytold/materialcraft#readme");
-                ui.hyperlink_to(tr("Community (Discord)"), "https://discord.gg/artcraft");
-                ui.hyperlink_to("getartcraft.com", "https://getartcraft.com/apps/materialcraft");
                 ui.add_space(16.0);
                 ui.checkbox(&mut app.ui.prefs.show_home, tr("Show at startup"));
             });
             ui.separator();
             ui.vertical(|ui| {
-                ui.label(RichText::new(tr("Welcome to MaterialCraft")).size(18.0).strong().color(tk.text_strong));
+                ui.label(RichText::new(tr("Welcome to MaterialCraft").replace("MaterialCraft", "Material")).size(18.0).strong().color(tk.text_strong));
                 ui.label(
                     RichText::new(tr(
                         "Build tileable materials from noises, patterns and filters, see them live in 2D and 3D, and export the maps for any engine.",
@@ -580,7 +575,8 @@ pub fn file_action(app: &mut MaterialCraftApp, ctx: &egui::Context, id: &str) ->
         match id {
             "file.open" => crate::web_files::open(ctx),
             "file.importBitmap" => crate::web_files::import_bitmap(ctx),
-            "file.save" | "file.saveAs" => crate::web_files::save(app),
+            "file.save" => crate::web_files::save(app),
+            "file.saveAs" => crate::web_files::save_as(app),
             "file.exportMaterial" => crate::web_files::export_material(app),
             _ => return false,
         }
