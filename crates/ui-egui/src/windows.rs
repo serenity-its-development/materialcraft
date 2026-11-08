@@ -297,7 +297,7 @@ fn preferences(app: &mut MaterialCraftApp, ctx: &egui::Context) {
 
 fn about(app: &mut MaterialCraftApp, ctx: &egui::Context) {
     let mut open = true;
-    modal(ctx, "about", tr("About MaterialCraft").replace("MaterialCraft", "Material"), &mut open, vec2(400.0, 260.0), |ui| {
+    modal(ctx, "about", &tr("About MaterialCraft").replace("MaterialCraft", "Material"), &mut open, vec2(400.0, 260.0), |ui| {
         let tk = Tokens::get(ui.ctx());
         ui.vertical_centered(|ui| {
             ui.label(RichText::new("Material").size(22.0).strong().color(tk.accent));
