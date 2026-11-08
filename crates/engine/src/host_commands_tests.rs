@@ -84,21 +84,22 @@ fn a_run_is_one_undo_step_named_by_its_label_and_the_saved_file_carries_it() {
     let def = "uniform";
     let r = run_command_batch(
         &mut s,
-        &json!({ "label": "Add a node and name it", "steps": [
+        &json!({ "label": "Add a node and note it", "steps": [
             { "name": "graph.node.add", "args": { "def": def, "at": [40, 40] } },
-            { "name": "graph.node.rename", "args": { "label": "From the assistant" } },
+            { "name": "graph.comment.add", "args": { "text": "From the assistant" } },
         ] }),
     )
     .unwrap();
     assert_eq!(r["undoStep"], true, "{r}");
     assert_eq!(s.history().len(), depth + 1, "the steps are one");
-    assert_eq!(s.history().last().map(String::as_str), Some("Add a node and name it"));
+    assert_eq!(s.history().last().map(String::as_str), Some("Add a node and note it"));
     assert_eq!(s.graph().unwrap().nodes.len(), nodes + 1);
     assert!(s.modified);
     let saved = save_host_file(&mut s).unwrap();
     let mut again = crate::new_session();
     open_host_file(&mut again, "bricks.sbs", &saved).unwrap();
     assert_eq!(again.graph().unwrap().nodes.len(), nodes + 1, "the saved package holds the run");
+    assert!(crate::inspect::session(&again, None).to_string().contains("From the assistant"), "the comment is saved");
     s.undo();
     assert_eq!(s.graph().unwrap().nodes.len(), nodes, "Undo takes the whole run back");
 }
@@ -118,5 +119,14 @@ fn a_step_that_fails_takes_the_whole_run_back() {
     .unwrap_err();
     assert!(e.starts_with("step-failed: step 2"), "{e}");
     assert_eq!(s.graph().unwrap().nodes.len(), nodes);
+    assert!(!s.modified);
+}
+
+#[test]
+fn a_node_label_the_package_cannot_carry_is_refused_by_name() {
+    let mut s = opened();
+    assert!(!ASSISTANT_COMMANDS.contains(&"graph.node.rename"));
+    let e = run_command_batch(&mut s, &json!({ "steps": [{ "name": "graph.node.add", "args": { "def": "uniform", "label": "Lost" } }] })).unwrap_err();
+    assert!(e.starts_with("argument-not-allowed:"), "{e}");
     assert!(!s.modified);
 }

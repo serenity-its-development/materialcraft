@@ -68,7 +68,6 @@ pub const ASSISTANT_COMMANDS: &[&str] = &[
     "graph.comment.delete",
     "graph.node.add",
     "graph.node.move",
-    "graph.node.rename",
     "graph.node.disable",
     "graph.node.param",
     "graph.node.reset",
@@ -103,6 +102,10 @@ pub const LEFT_OUT: &[(&str, &[&str])] = &[
     (
         "history: Undo and Redo are the person's, and a run is already ONE undo step (edit.finish would end it)",
         &["edit.undo", "edit.redo", "edit.finish"],
+    ),
+    (
+        "not carried by the format: a node's own label is not part of a Substance package (.sbs stores none), so a save would drop it without a word",
+        &["graph.node.rename"],
     ),
 ];
 
@@ -149,6 +152,9 @@ fn judge(params: &Value) -> Result<(String, Vec<(&'static str, Value)>), String>
             Some(a @ Value::Object(_)) => a.clone(),
             Some(_) => return Err(format!("argument-not-allowed: step '{name}' states args that are not an object -- nothing was run")),
         };
+        if id == "graph.node.add" && args.get("label").is_some() {
+            return Err(format!("argument-not-allowed: step '{name}' names 'label', and a node's label is not part of a Substance package (a save would drop it) -- nothing was run"));
+        }
         if let Some(k) = forbidden_arg(&args) {
             return Err(format!("argument-not-allowed: step '{name}' names '{k}', and a run does not reach files or addresses -- nothing was run"));
         }
